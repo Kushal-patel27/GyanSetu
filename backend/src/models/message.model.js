@@ -18,9 +18,14 @@ const messageSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    clientMessageId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
+
+messageSchema.index({ senderId: 1, receiverId: 1, clientMessageId: 1 }, { unique: true, sparse: true });
 
 const Message = mongoose.model("Message", messageSchema);
 

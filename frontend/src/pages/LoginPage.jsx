@@ -18,12 +18,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 pt-16">
+    <div className="min-h-screen grid lg:grid-cols-2 pt-20 pb-8">
       {/* Left Side - Form */}
-      <div className="flex flex-col justify-center items-center p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex flex-col justify-center items-center p-4 sm:p-8">
+        <div className="w-full max-w-md space-y-6">
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="flex flex-col items-center gap-2 group">
               <img src="/Gyaansetulogo.png" alt="GyãnSetu" className="w-12 h-12 rounded-xl object-cover" />
               <h1 className="text-2xl font-bold mt-2">Welcome Back</h1>
@@ -32,7 +32,7 @@ const LoginPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Email</span>

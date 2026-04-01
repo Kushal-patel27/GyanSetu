@@ -37,14 +37,33 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text, image, clientMessageId } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
+
+    if (clientMessageId) {
+      const existingMessage = await Message.findOne({
+        senderId,
+        receiverId,
+        clientMessageId,
+      });
+
+      if (existingMessage) {
+        return res.status(200).json(existingMessage);
+      }
+    }
 
     let imageUrl;
     if (image) {
       // Upload base64 image to cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(image);
+      const uploadResponse = await cloudinary.uploader.upload(image, {
+        folder: "gyaansetu-chat",
+        resource_type: "image",
+        transformation: [
+          { quality: "auto:good" },
+          { fetch_format: "auto" },
+        ],
+      });
       imageUrl = uploadResponse.secure_url;
     }
 
@@ -53,6 +72,7 @@ export const sendMessage = async (req, res) => {
       receiverId,
       text,
       image: imageUrl,
+      clientMessageId,
     });
 
     await newMessage.save();
@@ -64,6 +84,22 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json(newMessage);
   } catch (error) {
+    if (error?.code === 11000 && req.body?.clientMessageId) {
+      try {
+        const existingMessage = await Message.findOne({
+          senderId: req.user._id,
+          receiverId: req.params.id,
+          clientMessageId: req.body.clientMessageId,
+        });
+
+        if (existingMessage) {
+          return res.status(200).json(existingMessage);
+        }
+      } catch (lookupError) {
+        console.log("Error in duplicate message lookup: ", lookupError.message);
+      }
+    }
+
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
