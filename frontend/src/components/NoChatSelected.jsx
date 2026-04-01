@@ -6,7 +6,7 @@ const NoChatSelected = () => {
       <div className="max-w-md text-center space-y-6">
         {/* Icon Display */}
         <div className="flex justify-center gap-4 mb-4">
-          <img src="/Gyaansetulogo.png" alt="Gyansetu" className="w-16 h-16 rounded-2xl mx-auto" />
+          <img src="/logo.png" alt="Gyansetu" className="w-16 h-16 rounded-2xl mx-auto" />
         </div>
 
         {/* Welcome Text */}

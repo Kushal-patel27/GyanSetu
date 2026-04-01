@@ -3,7 +3,27 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+const BASE_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
+  "/";
+
+const normalizeObjectPayload = (payload) => {
+  if (
+    payload?.data?.data &&
+    typeof payload.data.data === "object" &&
+    !Array.isArray(payload.data.data)
+  ) {
+    return payload.data.data;
+  }
+  if (payload?.data && typeof payload.data === "object" && !Array.isArray(payload.data)) {
+    return payload.data;
+  }
+  if (payload?._id && typeof payload === "object" && !Array.isArray(payload)) {
+    return payload;
+  }
+  return null;
+};
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -17,9 +37,10 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
+      const authUser = normalizeObjectPayload(res.data);
 
-      set({ authUser: res.data });
-      get().connectSocket();
+      set({ authUser });
+      if (authUser) get().connectSocket();
     } catch (error) {
       console.log("Error in checkAuth:", error);
       set({ authUser: null });
@@ -32,11 +53,12 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data });
+      const authUser = normalizeObjectPayload(res.data);
+      set({ authUser });
       toast.success("Account created successfully");
-      get().connectSocket();
+      if (authUser) get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to sign up");
     } finally {
       set({ isSigningUp: false });
     }
@@ -46,12 +68,13 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data });
+      const authUser = normalizeObjectPayload(res.data);
+      set({ authUser });
       toast.success("Logged in successfully");
 
-      get().connectSocket();
+      if (authUser) get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to log in");
     } finally {
       set({ isLoggingIn: false });
     }
@@ -64,7 +87,7 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to log out");
     }
   },
 
@@ -72,11 +95,11 @@ export const useAuthStore = create((set, get) => ({
     set({ isUpdatingProfile: true });
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
-      set({ authUser: res.data });
+      set({ authUser: normalizeObjectPayload(res.data) });
       toast.success("Profile updated successfully");
     } catch (error) {
       console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to update profile");
     } finally {
       set({ isUpdatingProfile: false });
     }
@@ -96,7 +119,7 @@ export const useAuthStore = create((set, get) => ({
     set({ socket: socket });
 
     socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
+      set({ onlineUsers: Array.isArray(userIds) ? userIds : [] });
     });
   },
   disconnectSocket: () => {

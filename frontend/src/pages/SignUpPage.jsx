@@ -42,7 +42,7 @@ const SignUpPage = () => {
           {/* LOGO */}
           <div className="text-center mb-6">
             <div className="flex flex-col items-center gap-2 group">
-              <img src="/Gyaansetulogo.png" alt="GyãnSetu" className="size-12 rounded-xl object-cover" />
+              <img src="/logo.png" alt="GyãnSetu" className="size-12 rounded-xl object-cover" />
               <h1 className="text-2xl font-bold mt-2">Create Account</h1>
               <p className="text-base-content/60">Get started with your free account</p>
             </div>

@@ -7,7 +7,7 @@ const AuthImagePattern = ({ title, subtitle }) => {
       <div className="absolute top-1/3 -right-16 w-40 h-40 rounded-full bg-accent/15 blur-2xl animate-float-slow animation-delay-4000" />
 
       <div className="relative max-w-md text-center space-y-4">
-        <img src="/Gyaansetulogo.png" alt="GyãnSetu logo" className="w-20 h-20 mx-auto rounded-xl shadow animate-bounce" />
+        <img src="/logo.png" alt="GyãnSetu logo" className="w-20 h-20 mx-auto rounded-xl shadow animate-bounce" />
 
         <div className="grid grid-cols-3 gap-2">
           {[

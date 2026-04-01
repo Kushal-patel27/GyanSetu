@@ -12,13 +12,16 @@ const Sidebar = ({ className = "" }) => {
   const { theme } = useThemeStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
+  const safeUsers = Array.isArray(users) ? users : [];
+  const safeOnlineUsers = Array.isArray(onlineUsers) ? onlineUsers : [];
+
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
   const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+    ? safeUsers.filter((user) => safeOnlineUsers.includes(user._id))
+    : safeUsers;
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -44,7 +47,7 @@ const Sidebar = ({ className = "" }) => {
               />
               <span className="text-xs">Online only</span>
             </label>
-            <span className="text-xs text-base-content/60">({onlineUsers.length - 1})</span>
+            <span className="text-xs text-base-content/60">({Math.max(safeOnlineUsers.length - 1, 0)})</span>
           </div>
         </div>
       </div>
@@ -66,7 +69,7 @@ const Sidebar = ({ className = "" }) => {
                 alt={user.name}
                 className="size-10 sm:size-10 lg:size-11 object-cover rounded-full"
               />
-              {onlineUsers.includes(user._id) && (
+              {safeOnlineUsers.includes(user._id) && (
                 <span
                   className="absolute bottom-0 right-0 size-2.5 bg-green-500 
                   rounded-full ring-2 ring-base-100"
@@ -78,7 +81,7 @@ const Sidebar = ({ className = "" }) => {
             <div className="block md:hidden lg:block text-left min-w-0 flex-1">
               <div className="font-medium text-sm truncate">{user.fullName}</div>
               <div className="text-xs text-base-content/60">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                {safeOnlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
           </button>

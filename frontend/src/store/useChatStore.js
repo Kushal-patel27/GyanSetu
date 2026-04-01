@@ -3,10 +3,22 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
 
+const normalizeArrayPayload = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  if (Array.isArray(payload?.users)) return payload.users;
+  if (Array.isArray(payload?.data?.users)) return payload.data.users;
+  if (Array.isArray(payload?.messages)) return payload.messages;
+  if (Array.isArray(payload?.data?.messages)) return payload.data.messages;
+  return [];
+};
+
 const appendUniqueMessage = (messages, nextMessage) => {
+  const safeMessages = Array.isArray(messages) ? messages : [];
   if (!nextMessage) return messages;
 
-  const messageExists = messages.some((message) => {
+  const messageExists = safeMessages.some((message) => {
     if (nextMessage._id && message._id === nextMessage._id) return true;
     if (
       nextMessage.clientMessageId &&
@@ -18,8 +30,8 @@ const appendUniqueMessage = (messages, nextMessage) => {
     return false;
   });
 
-  if (messageExists) return messages;
-  return [...messages, nextMessage];
+  if (messageExists) return safeMessages;
+  return [...safeMessages, nextMessage];
 };
 
 export const useChatStore = create((set, get) => ({
@@ -35,9 +47,10 @@ export const useChatStore = create((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data });
+      set({ users: normalizeArrayPayload(res.data) });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to load users");
+      set({ users: [] });
     } finally {
       set({ isUsersLoading: false });
     }
@@ -47,9 +60,10 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
+      set({ messages: normalizeArrayPayload(res.data) });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to load messages");
+      set({ messages: [] });
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -69,10 +83,10 @@ export const useChatStore = create((set, get) => ({
         clientMessageId,
       });
       set((state) => ({
-        messages: appendUniqueMessage(state.messages, res.data),
+        messages: appendUniqueMessage(state.messages, res.data?.data || res.data),
       }));
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Failed to send message");
     } finally {
       set({ isSendingMessage: false });
     }
@@ -92,8 +106,8 @@ export const useChatStore = create((set, get) => ({
 
     const listener = (newMessage) => {
       const isMessageForCurrentConversation =
-        (newMessage.senderId === selectedUser._id && newMessage.receiverId === authUserId) ||
-        (newMessage.senderId === authUserId && newMessage.receiverId === selectedUser._id);
+        (newMessage?.senderId === selectedUser._id && newMessage?.receiverId === authUserId) ||
+        (newMessage?.senderId === authUserId && newMessage?.receiverId === selectedUser._id);
 
       if (!isMessageForCurrentConversation) return;
 

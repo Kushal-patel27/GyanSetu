@@ -4,6 +4,8 @@ import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 
+const GOOGLE_AUTH_REDIRECT_URL = `${import.meta.env.VITE_API_URL || "/api"}/auth/google/redirect`;
+
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,7 +27,7 @@ const LoginPage = () => {
           {/* Logo */}
           <div className="text-center mb-6">
             <div className="flex flex-col items-center gap-2 group">
-              <img src="/Gyaansetulogo.png" alt="GyãnSetu" className="w-12 h-12 rounded-xl object-cover" />
+              <img src="/logo.png" alt="GyãnSetu" className="w-12 h-12 rounded-xl object-cover" />
               <h1 className="text-2xl font-bold mt-2">Welcome Back</h1>
               <p className="text-base-content/60">Sign in to your account</p>
             </div>
@@ -101,7 +103,7 @@ const LoginPage = () => {
 
           {/* Redirect-based Google sign-in */}
           <a
-            href="http://localhost:5001/api/auth/google/redirect"
+            href={GOOGLE_AUTH_REDIRECT_URL}
             className="btn btn-outline w-full gap-3"
             aria-label="Continue with Google"
           >
