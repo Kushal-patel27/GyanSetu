@@ -5,9 +5,24 @@ import express from "express";
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://gyansetu-be4p.onrender.com",
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",") : []),
+]
+  .map((origin) => origin?.trim())
+  .filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Socket CORS not allowed for origin: ${origin}`));
+    },
+    credentials: true,
   },
 });
 
