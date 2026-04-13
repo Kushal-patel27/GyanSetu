@@ -4,7 +4,7 @@ import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 
-const GOOGLE_AUTH_REDIRECT_URL = `${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5001").replace(/\/+$/, "")}/api/auth/google/redirect`;
+const GOOGLE_AUTH_REDIRECT_URL = `${(import.meta.env.VITE_API_URL || "http://localhost:5001/api").replace(/\/+$/, "")}/auth/google/redirect`;
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);

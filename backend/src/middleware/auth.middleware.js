@@ -19,6 +19,13 @@ export const protectRoute = async (req, res, next) => {
     const token = getTokenFromRequest(req);
 
     if (!token) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("Missing auth token", {
+          path: req.originalUrl,
+          hasCookie: Boolean(req.cookies?.jwt),
+          hasAuthHeader: Boolean(req.headers?.authorization),
+        });
+      }
       return res.status(401).json({ message: "Unauthorized - No Token Provided" });
     }
 
