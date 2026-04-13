@@ -9,7 +9,6 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
 
-
 const __dirname = path.resolve();
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -17,7 +16,7 @@ const PORT = process.env.PORT || 5001; // Added a fallback PORT
 
 const allowedOrigins = [
 	"http://localhost:5173",
-	"https://gyansetu-be4p.onrender.com",
+	"https://gyansetu-n28h.onrender.com",
 	process.env.FRONTEND_URL,
 	...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",") : []),
 ]
@@ -26,8 +25,9 @@ const allowedOrigins = [
 
 const corsOptions = {
 	origin: (origin, callback) => {
+		const isLocalhostOrigin = typeof origin === "string" && /^http:\/\/localhost:\d+$/i.test(origin);
 		// Allow non-browser requests (no Origin header) and configured frontend origins.
-		if (!origin || allowedOrigins.includes(origin)) {
+		if (!origin || isLocalhostOrigin || allowedOrigins.includes(origin)) {
 			return callback(null, true);
 		}
 		return callback(new Error(`CORS not allowed for origin: ${origin}`));

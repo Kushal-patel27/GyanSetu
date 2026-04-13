@@ -1,6 +1,5 @@
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { useThemeStore } from "../store/useThemeStore";
 
 import Sidebar from "../components/Sidebar";
 import ChatContainer from "../components/ChatContainer";
@@ -10,7 +9,6 @@ import { useEffect } from "react";
 const HomePage = () => {
   const { selectedUser, users, getUsers, setSelectedUser } = useChatStore();
   const { onlineUsers, authUser } = useAuthStore();
-  const { theme } = useThemeStore();
 
   useEffect(() => {
     getUsers();
@@ -21,7 +19,7 @@ const HomePage = () => {
 
   return (
     <div className="bg-base-100 pt-16">
-      <div className="bg-base-100 w-full h-[calc(100dvh-4rem)] overflow-hidden box-border" data-theme={theme}>
+      <div className="bg-base-100 w-full h-[calc(100dvh-4rem)] overflow-hidden box-border" data-theme="dark">
           {selectedUser ? (
             // Chat view when user is selected
             <div className="flex h-full w-full items-stretch gap-0 min-h-0 min-w-0">

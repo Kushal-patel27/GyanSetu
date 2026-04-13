@@ -1,9 +1,22 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
+const getTokenFromRequest = (req) => {
+  const cookieToken = req.cookies?.jwt;
+  if (cookieToken) return cookieToken;
+
+  const authHeader = req.headers?.authorization || req.headers?.Authorization;
+  if (!authHeader || typeof authHeader !== "string") return null;
+
+  const [scheme, token] = authHeader.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+
+  return token;
+};
+
 export const protectRoute = async (req, res, next) => {
   try {
-    const token = req.cookies.jwt;
+    const token = getTokenFromRequest(req);
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized - No Token Provided" });
@@ -26,6 +39,9 @@ export const protectRoute = async (req, res, next) => {
     next();
   } catch (error) {
     console.log("Error in protectRoute middleware: ", error.message);
+    if (error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Unauthorized - Invalid Token" });
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 };

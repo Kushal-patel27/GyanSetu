@@ -49,6 +49,12 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get("/messages/users");
       set({ users: normalizeArrayPayload(res.data) });
     } catch (error) {
+      if (error?.response?.status === 401) {
+        useAuthStore.getState().clearAuthState();
+        toast.error("Session expired. Please log in again.");
+        set({ users: [] });
+        return;
+      }
       toast.error(error?.response?.data?.message || "Failed to load users");
       set({ users: [] });
     } finally {
@@ -62,6 +68,12 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: normalizeArrayPayload(res.data) });
     } catch (error) {
+      if (error?.response?.status === 401) {
+        useAuthStore.getState().clearAuthState();
+        toast.error("Session expired. Please log in again.");
+        set({ messages: [] });
+        return;
+      }
       toast.error(error?.response?.data?.message || "Failed to load messages");
       set({ messages: [] });
     } finally {
@@ -86,6 +98,11 @@ export const useChatStore = create((set, get) => ({
         messages: appendUniqueMessage(state.messages, res.data?.data || res.data),
       }));
     } catch (error) {
+      if (error?.response?.status === 401) {
+        useAuthStore.getState().clearAuthState();
+        toast.error("Session expired. Please log in again.");
+        return;
+      }
       toast.error(error?.response?.data?.message || "Failed to send message");
     } finally {
       set({ isSendingMessage: false });

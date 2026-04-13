@@ -1,12 +1,9 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+import { axiosInstance } from "../lib/axios.js";
 
-const BASE_URL =
-  import.meta.env.VITE_SOCKET_URL ||
-  import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
-  "/";
+const BASE_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:5001").replace(/\/+$/, "");
 
 const normalizeObjectPayload = (payload) => {
   if (
@@ -16,12 +13,15 @@ const normalizeObjectPayload = (payload) => {
   ) {
     return payload.data.data;
   }
+
   if (payload?.data && typeof payload.data === "object" && !Array.isArray(payload.data)) {
     return payload.data;
   }
+
   if (payload?._id && typeof payload === "object" && !Array.isArray(payload)) {
     return payload;
   }
+
   return null;
 };
 
@@ -34,15 +34,23 @@ export const useAuthStore = create((set, get) => ({
   onlineUsers: [],
   socket: null,
 
+  clearAuthState: () => {
+    const currentSocket = get().socket;
+    if (currentSocket?.connected) currentSocket.disconnect();
+    set({ authUser: null, socket: null, onlineUsers: [] });
+  },
+
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
       const authUser = normalizeObjectPayload(res.data);
-
       set({ authUser });
+
       if (authUser) get().connectSocket();
     } catch (error) {
-      console.log("Error in checkAuth:", error);
+      if (error?.response?.status !== 401) {
+        console.log("Error in checkAuth:", error);
+      }
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -56,6 +64,7 @@ export const useAuthStore = create((set, get) => ({
       const authUser = normalizeObjectPayload(res.data);
       set({ authUser });
       toast.success("Account created successfully");
+
       if (authUser) get().connectSocket();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to sign up");
@@ -83,9 +92,8 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
-      set({ authUser: null });
+      get().clearAuthState();
       toast.success("Logged out successfully");
-      get().disconnectSocket();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to log out");
     }
@@ -115,15 +123,17 @@ export const useAuthStore = create((set, get) => ({
         userId: authUser._id,
       },
     });
-    socket.connect();
 
-    set({ socket: socket });
+    socket.connect();
+    set({ socket });
 
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: Array.isArray(userIds) ? userIds : [] });
     });
   },
+
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
+    set({ socket: null, onlineUsers: [] });
   },
 }));

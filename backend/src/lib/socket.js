@@ -7,7 +7,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://gyansetu-be4p.onrender.com",
+  "https://gyansetu-n28h.onrender.com",
   process.env.FRONTEND_URL,
   ...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",") : []),
 ]
@@ -17,7 +17,9 @@ const allowedOrigins = [
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      const isLocalhostOrigin = typeof origin === "string" && /^http:\/\/localhost:\d+$/i.test(origin);
+
+      if (!origin || isLocalhostOrigin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`Socket CORS not allowed for origin: ${origin}`));
