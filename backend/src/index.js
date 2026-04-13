@@ -18,41 +18,60 @@ const PORT = process.env.PORT || 5001;
  * CORS Configuration for Production Deployment
  * 
  * Allowed Origins:
- * - Frontend Render URL: https://gyansetu-n28h.onrender.com
- * - Localhost: http://localhost:5173, http://localhost:5174
- * - Environment variables: FRONTEND_URL, FRONTEND_URLS
+ * - Localhost: http://localhost:5173, http://localhost:5174 (development)
+ * - Frontend Render URL: loaded from FRONTEND_URL env variable
+ * - Additional URLs: FRONTEND_URLS (comma-separated, optional)
+ * 
+ * Production Setup (Render):
+ * Set FRONTEND_URL=https://gyansetu-be4p.onrender.com
  * 
  * Credentials: true enables cookie transmission in cross-origin requests
  */
-const allowedOrigins = [
-	"http://localhost:5173",
-	"http://localhost:5174",
-	"https://gyansetu-n28h.onrender.com",
-	process.env.FRONTEND_URL,
-	...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",") : []),
-]
-	.map((origin) => origin?.trim())
-	.filter(Boolean);
+const getAllowedOrigins = () => {
+	const origins = [
+		"http://localhost:5173",
+		"http://localhost:5174",
+		process.env.FRONTEND_URL,
+		...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim()) : []),
+	];
+	return origins.filter(Boolean);
+};
+
+const allowedOrigins = getAllowedOrigins();
+
+console.log("✅ Allowed CORS Origins:", allowedOrigins);
 
 const corsOptions = {
 	origin: (origin, callback) => {
-		// Allow non-browser requests (no Origin header) and localhost in development
-		const isLocalhostOrigin = typeof origin === "string" && /^http:\/\/localhost:\d+$/i.test(origin);
-		
-		if (!origin || isLocalhostOrigin || allowedOrigins.includes(origin)) {
+		// Allow requests without origin header (e.g., mobile apps, tools)
+		if (!origin) {
 			return callback(null, true);
 		}
-		
-		console.warn(`CORS blocked - Unauthorized origin: ${origin}`);
-		return callback(new Error(`CORS not allowed for origin: ${origin}`));
+
+		// Allow localhost on any port in development
+		const isLocalhostOrigin = /^http:\/\/localhost:\d+$/i.test(origin);
+		if (isLocalhostOrigin) {
+			return callback(null, true);
+		}
+
+		// Allow configured frontend origins
+		if (allowedOrigins.includes(origin)) {
+			return callback(null, true);
+		}
+
+		// IMPORTANT: Do NOT throw error here during preflight
+		// Just return false to let browser handle it
+		console.warn(`CORS rejected origin: ${origin}`);
+		callback(new Error("CORS not allowed"));
 	},
-	credentials: true, // Enable cookies, authorization headers
+	credentials: true, // Enable cookies, authorization headers, credentials
 	methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 	allowedHeaders: ["Content-Type", "Authorization"],
+	optionsSuccessStatus: 200, // For compatibility with older browsers
 };
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.use(cookieParser());
 app.use(cors(corsOptions));
