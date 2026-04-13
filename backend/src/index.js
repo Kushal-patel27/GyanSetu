@@ -14,60 +14,18 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const PORT = process.env.PORT || 5001;
 
-/**
- * CORS Configuration for Production Deployment
- * 
- * Allowed Origins:
- * - Localhost: http://localhost:5173, http://localhost:5174 (development)
- * - Frontend Render URL: loaded from FRONTEND_URL env variable
- * - Additional URLs: FRONTEND_URLS (comma-separated, optional)
- * 
- * Production Setup (Render):
- * Set FRONTEND_URL=https://gyansetu-be4p.onrender.com
- * 
- * Credentials: true enables cookie transmission in cross-origin requests
- */
-const getAllowedOrigins = () => {
-	const origins = [
-		"http://localhost:5173",
-		"http://localhost:5174",
-		process.env.FRONTEND_URL,
-		...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim()) : []),
-	];
-	return origins.filter(Boolean);
-};
-
-const allowedOrigins = getAllowedOrigins();
-
-console.log("✅ Allowed CORS Origins:", allowedOrigins);
+// Temporary debugging mode: allow all origins dynamically.
+// Not safe for production when credentials are enabled.
+console.warn("⚠️ CORS debug mode enabled: allowing all origins.");
 
 const corsOptions = {
 	origin: (origin, callback) => {
-		// Allow requests without origin header (e.g., mobile apps, tools)
-		if (!origin) {
-			return callback(null, true);
-		}
-
-		// Allow localhost on any port in development
-		const isLocalhostOrigin = /^http:\/\/localhost:\d+$/i.test(origin);
-		if (isLocalhostOrigin) {
-			return callback(null, true);
-		}
-
-		// Allow configured frontend origins
-		if (allowedOrigins.includes(origin)) {
-			return callback(null, true);
-		}
-
-		// IMPORTANT: Do NOT throw error here during preflight
-		// Just return false to let browser handle it
-		console.warn(`CORS rejected origin: ${origin}`);
-		callback(new Error("CORS not allowed"));
+		callback(null, true);
 	},
-	credentials: true, // Enable cookies, authorization headers, credentials
+	credentials: true,
 	methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 	allowedHeaders: ["Content-Type", "Authorization"],
-	optionsSuccessStatus: 200, // For compatibility with older browsers
+	optionsSuccessStatus: 200,
 };
 
 app.use(express.json({ limit: "10mb" }));
