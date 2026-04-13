@@ -10,28 +10,9 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 const app = express();
 const server = createServer(app);
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  ...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(",") : []),
-  "http://localhost:5173",
-  "http://localhost:5174",
-]
-  .map((origin) => origin?.trim())
-  .filter(Boolean);
-
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-
-      const isLocalhostOrigin = /^http:\/\/localhost:\d+$/i.test(origin);
-      if (isLocalhostOrigin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      console.warn(`Socket CORS rejected origin: ${origin}`);
-      return callback(null, false);
-    },
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
   },
@@ -47,6 +28,14 @@ export function getReceiverSocketId(userId) {
 io.on("connection", (socket) => {
   const { userId } = socket.handshake.query;
 
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Socket connected", {
+      socketId: socket.id,
+      userId: userId || null,
+      origin: socket.handshake.headers?.origin || null,
+    });
+  }
+
   if (userId) {
     userSocketMap[userId] = socket.id;
   }
@@ -57,6 +46,13 @@ io.on("connection", (socket) => {
     if (userId) {
       delete userSocketMap[userId];
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Socket disconnected", {
+        socketId: socket.id,
+        userId: userId || null,
+      });
     }
   });
 });

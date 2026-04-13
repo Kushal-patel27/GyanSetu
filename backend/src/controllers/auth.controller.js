@@ -64,6 +64,14 @@ export const login = async (req, res) => {
 
     generateToken(user._id, res);
 
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Login debug", {
+        email,
+        origin: req.headers.origin || null,
+        setCookieHeader: res.getHeader("set-cookie") || null,
+      });
+    }
+
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,

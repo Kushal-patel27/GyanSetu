@@ -17,15 +17,19 @@ const getTokenFromRequest = (req) => {
 export const protectRoute = async (req, res, next) => {
   try {
     const token = getTokenFromRequest(req);
+    const tokenSource = req.cookies?.jwt ? "cookie" : "authorization-header";
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Auth middleware debug", {
+        path: req.originalUrl,
+        origin: req.headers.origin || null,
+        hasCookie: Boolean(req.cookies?.jwt),
+        hasAuthHeader: Boolean(req.headers?.authorization),
+        tokenSource: token ? tokenSource : null,
+      });
+    }
 
     if (!token) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("Missing auth token", {
-          path: req.originalUrl,
-          hasCookie: Boolean(req.cookies?.jwt),
-          hasAuthHeader: Boolean(req.headers?.authorization),
-        });
-      }
       return res.status(401).json({ message: "Unauthorized - No Token Provided" });
     }
 

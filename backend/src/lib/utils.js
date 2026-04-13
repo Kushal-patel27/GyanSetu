@@ -9,14 +9,12 @@ import jwt from "jsonwebtoken";
  * sameSite: "lax" (dev) - Development-friendly CORS
  */
 const getCookieOptions = () => {
-  const isProduction = process.env.NODE_ENV === "production";
-
   return {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     path: "/",
     httpOnly: true, // Prevents XSS attacks - cookies not accessible via JS
-    secure: isProduction, // HTTPS only in production
-    sameSite: isProduction ? "none" : "lax", // "none" requires secure: true
+    secure: true,
+    sameSite: "none",
   };
 };
 
